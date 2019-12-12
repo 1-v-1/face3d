@@ -28,7 +28,7 @@ ep = bfm.get_exp_para('zero')
 exp_sigma = bfm.get_exp_sigma()
 # print(exp_sigma)
 # print(exp_sigma.shape)
-ep[4] = -5
+# ep[4] = -5
 
 vertices = bfm.generate_vertices(sp, ep)
 
@@ -42,6 +42,7 @@ tp = bfm.get_tex_para('zero')
 colors = bfm.generate_colors(tp)
 colors = np.minimum(np.maximum(colors, 0), 1)
 
+
 # --- 3. transform vertices to proper position
 s = 8e-04
 # angles = [10, 30, 20]
@@ -52,7 +53,7 @@ projected_vertices = transformed_vertices.copy()  # using stantard camera & orth
 
 # --- 4. render(3d obj --> 2d image)
 # set prop of rendering
-h = w = 256;
+h = w = 256
 c = 3
 image_vertices = mesh.transform.to_image(projected_vertices, h, w)
 image = mesh.render.render_colors(image_vertices, bfm.triangles, colors, h, w)
