@@ -2,6 +2,7 @@
 Estimating parameters about vertices: shape para, exp para, pose para(s, R, t)
 '''
 import numpy as np
+
 from .. import mesh
 
 ''' TODO: a clear document. 
@@ -52,7 +53,8 @@ Inference:
 
 '''
 
-def estimate_shape(x, shapeMU, shapePC, shapeEV, expression, s, R, t2d, lamb = 3000):
+
+def estimate_shape(x, shapeMU, shapePC, shapeEV, expression, s, R, t2d, lamb=3000):
     '''
     Args:
         x: (2, n). image points (to be fitted)
@@ -69,35 +71,35 @@ def estimate_shape(x, shapeMU, shapePC, shapeEV, expression, s, R, t2d, lamb = 3
         shape_para: (n_sp, 1) shape parameters(coefficients)
     '''
     x = x.copy()
-    assert(shapeMU.shape[0] == shapePC.shape[0])
-    assert(shapeMU.shape[0] == x.shape[1]*3)
+    assert (shapeMU.shape[0] == shapePC.shape[0])
+    assert (shapeMU.shape[0] == x.shape[1] * 3)
 
     dof = shapePC.shape[1]
 
     n = x.shape[1]
     sigma = shapeEV
     t2d = np.array(t2d)
-    P = np.array([[1, 0, 0], [0, 1, 0]], dtype = np.float32)
-    A = s*P.dot(R)
+    P = np.array([[1, 0, 0], [0, 1, 0]], dtype=np.float32)
+    A = s * P.dot(R)
 
     # --- calc pc
-    pc_3d = np.resize(shapePC.T, [dof, n, 3]) # 199 x n x 3
-    pc_3d = np.reshape(pc_3d, [dof*n, 3]) 
-    pc_2d = pc_3d.dot(A.T.copy()) # 199 x n x 2
-    
-    pc = np.reshape(pc_2d, [dof, -1]).T # 2n x 199
+    pc_3d = np.resize(shapePC.T, [dof, n, 3])  # 199 x n x 3
+    pc_3d = np.reshape(pc_3d, [dof * n, 3])
+    pc_2d = pc_3d.dot(A.T.copy())  # 199 x n x 2
+
+    pc = np.reshape(pc_2d, [dof, -1]).T  # 2n x 199
 
     # --- calc b
     # shapeMU
-    mu_3d = np.resize(shapeMU, [n, 3]).T # 3 x n
+    mu_3d = np.resize(shapeMU, [n, 3]).T  # 3 x n
     # expression
     exp_3d = expression
     # 
-    b = A.dot(mu_3d + exp_3d) + np.tile(t2d[:, np.newaxis], [1, n]) # 2 x n
-    b = np.reshape(b.T, [-1, 1]) # 2n x 1
+    b = A.dot(mu_3d + exp_3d) + np.tile(t2d[:, np.newaxis], [1, n])  # 2 x n
+    b = np.reshape(b.T, [-1, 1])  # 2n x 1
 
     # --- solve
-    equation_left = np.dot(pc.T, pc) + lamb * np.diagflat(1/sigma**2)
+    equation_left = np.dot(pc.T, pc) + lamb * np.diagflat(1 / sigma ** 2)
     x = np.reshape(x.T, [-1, 1])
     equation_right = np.dot(pc.T, x - b)
 
@@ -105,7 +107,8 @@ def estimate_shape(x, shapeMU, shapePC, shapeEV, expression, s, R, t2d, lamb = 3
 
     return shape_para
 
-def estimate_expression(x, shapeMU, expPC, expEV, shape, s, R, t2d, lamb = 2000):
+
+def estimate_expression(x, shapeMU, expPC, expEV, shape, s, R, t2d, lamb=2000):
     '''
     Args:
         x: (2, n). image points (to be fitted)
@@ -122,44 +125,44 @@ def estimate_expression(x, shapeMU, expPC, expEV, shape, s, R, t2d, lamb = 2000)
         exp_para: (n_ep, 1) shape parameters(coefficients)
     '''
     x = x.copy()
-    assert(shapeMU.shape[0] == expPC.shape[0])
-    assert(shapeMU.shape[0] == x.shape[1]*3)
+    assert (shapeMU.shape[0] == expPC.shape[0])
+    assert (shapeMU.shape[0] == x.shape[1] * 3)
 
     dof = expPC.shape[1]
 
     n = x.shape[1]
     sigma = expEV
     t2d = np.array(t2d)
-    P = np.array([[1, 0, 0], [0, 1, 0]], dtype = np.float32)
-    A = s*P.dot(R)
+    P = np.array([[1, 0, 0], [0, 1, 0]], dtype=np.float32)
+    A = s * P.dot(R)
 
     # --- calc pc
-    pc_3d = np.resize(expPC.T, [dof, n, 3]) 
-    pc_3d = np.reshape(pc_3d, [dof*n, 3]) 
-    pc_2d = pc_3d.dot(A.T) 
-    pc = np.reshape(pc_2d, [dof, -1]).T # 2n x 29
+    pc_3d = np.resize(expPC.T, [dof, n, 3])
+    pc_3d = np.reshape(pc_3d, [dof * n, 3])
+    pc_2d = pc_3d.dot(A.T)
+    pc = np.reshape(pc_2d, [dof, -1]).T  # 2n x 29
 
     # --- calc b
     # shapeMU
-    mu_3d = np.resize(shapeMU, [n, 3]).T # 3 x n
+    mu_3d = np.resize(shapeMU, [n, 3]).T  # 3 x n
     # expression
     shape_3d = shape
     # 
-    b = A.dot(mu_3d + shape_3d) + np.tile(t2d[:, np.newaxis], [1, n]) # 2 x n
-    b = np.reshape(b.T, [-1, 1]) # 2n x 1
+    b = A.dot(mu_3d + shape_3d) + np.tile(t2d[:, np.newaxis], [1, n])  # 2 x n
+    b = np.reshape(b.T, [-1, 1])  # 2n x 1
 
     # --- solve
-    equation_left = np.dot(pc.T, pc) + lamb * np.diagflat(1/sigma**2)
+    equation_left = np.dot(pc.T, pc) + lamb * np.diagflat(1 / sigma ** 2)
     x = np.reshape(x.T, [-1, 1])
     equation_right = np.dot(pc.T, x - b)
 
     exp_para = np.dot(np.linalg.inv(equation_left), equation_right)
-    
+
     return exp_para
 
 
 # ---------------- fit 
-def fit_points(x, X_ind, model, n_sp, n_ep, max_iter = 4):
+def fit_points(x, X_ind, model, n_sp, n_ep, max_iter=4):
     '''
     Args:
         x: (n, 2) image points
@@ -173,12 +176,12 @@ def fit_points(x, X_ind, model, n_sp, n_ep, max_iter = 4):
     '''
     x = x.copy().T
 
-    #-- init
-    sp = np.zeros((n_sp, 1), dtype = np.float32)
-    ep = np.zeros((n_ep, 1), dtype = np.float32)
+    # -- init
+    sp = np.zeros((n_sp, 1), dtype=np.float32)
+    ep = np.zeros((n_ep, 1), dtype=np.float32)
 
-    #-------------------- estimate
-    X_ind_all = np.tile(X_ind[np.newaxis, :], [3, 1])*3
+    # -------------------- estimate
+    X_ind_all = np.tile(X_ind[np.newaxis, :], [3, 1]) * 3
     X_ind_all[1, :] += 1
     X_ind_all[2, :] += 2
     valid_ind = X_ind_all.flatten('F')
@@ -189,30 +192,30 @@ def fit_points(x, X_ind, model, n_sp, n_ep, max_iter = 4):
 
     for i in range(max_iter):
         X = shapeMU + shapePC.dot(sp) + expPC.dot(ep)
-        X = np.reshape(X, [int(len(X)/3), 3]).T
-        
-        #----- estimate pose
+        X = np.reshape(X, [int(len(X) / 3), 3]).T
+
+        # ----- estimate pose
         P = mesh.transform.estimate_affine_matrix_3d22d(X.T, x.T)
         s, R, t = mesh.transform.P2sRt(P)
         rx, ry, rz = mesh.transform.matrix2angle(R)
         # print('Iter:{}; estimated pose: s {}, rx {}, ry {}, rz {}, t1 {}, t2 {}'.format(i, s, rx, ry, rz, t[0], t[1]))
 
-        #----- estimate shape
+        # ----- estimate shape
         # expression
         shape = shapePC.dot(sp)
-        shape = np.reshape(shape, [int(len(shape)/3), 3]).T
-        ep = estimate_expression(x, shapeMU, expPC, model['expEV'][:n_ep,:], shape, s, R, t[:2], lamb = 20)
+        shape = np.reshape(shape, [int(len(shape) / 3), 3]).T
+        ep = estimate_expression(x, shapeMU, expPC, model['expEV'][:n_ep, :], shape, s, R, t[:2], lamb=20)
 
         # shape
         expression = expPC.dot(ep)
-        expression = np.reshape(expression, [int(len(expression)/3), 3]).T
-        sp = estimate_shape(x, shapeMU, shapePC, model['shapeEV'][:n_sp,:], expression, s, R, t[:2], lamb = 40)
+        expression = np.reshape(expression, [int(len(expression) / 3), 3]).T
+        sp = estimate_shape(x, shapeMU, shapePC, model['shapeEV'][:n_sp, :], expression, s, R, t[:2], lamb=40)
 
     return sp, ep, s, R, t
 
 
 # ---------------- fitting process
-def fit_points_for_show(x, X_ind, model, n_sp, n_ep, max_iter = 4):
+def fit_points_for_show(x, X_ind, model, n_sp, n_ep, max_iter=4):
     '''
     Args:
         x: (n, 2) image points
@@ -226,12 +229,12 @@ def fit_points_for_show(x, X_ind, model, n_sp, n_ep, max_iter = 4):
     '''
     x = x.copy().T
 
-    #-- init
-    sp = np.zeros((n_sp, 1), dtype = np.float32)
-    ep = np.zeros((n_ep, 1), dtype = np.float32)
+    # -- init
+    sp = np.zeros((n_sp, 1), dtype=np.float32)
+    ep = np.zeros((n_ep, 1), dtype=np.float32)
 
-    #-------------------- estimate
-    X_ind_all = np.tile(X_ind[np.newaxis, :], [3, 1])*3
+    # -------------------- estimate
+    X_ind_all = np.tile(X_ind[np.newaxis, :], [3, 1]) * 3
     X_ind_all[1, :] += 1
     X_ind_all[2, :] += 2
     valid_ind = X_ind_all.flatten('F')
@@ -243,28 +246,38 @@ def fit_points_for_show(x, X_ind, model, n_sp, n_ep, max_iter = 4):
     s = 4e-04
     R = mesh.transform.angle2matrix([0, 0, 0])
     t = [0, 0, 0]
-    lsp = []; lep = []; ls = []; lR = []; lt = []
+    lsp = [];
+    lep = [];
+    ls = [];
+    lR = [];
+    lt = []
     for i in range(max_iter):
         X = shapeMU + shapePC.dot(sp) + expPC.dot(ep)
-        X = np.reshape(X, [int(len(X)/3), 3]).T
-        lsp.append(sp); lep.append(ep); ls.append(s), lR.append(R), lt.append(t)
-        
-        #----- estimate pose
+        X = np.reshape(X, [int(len(X) / 3), 3]).T
+        lsp.append(sp);
+        lep.append(ep);
+        ls.append(s), lR.append(R), lt.append(t)
+
+        # ----- estimate pose
         P = mesh.transform.estimate_affine_matrix_3d22d(X.T, x.T)
         s, R, t = mesh.transform.P2sRt(P)
-        lsp.append(sp); lep.append(ep); ls.append(s), lR.append(R), lt.append(t)
+        lsp.append(sp);
+        lep.append(ep);
+        ls.append(s), lR.append(R), lt.append(t)
 
-        #----- estimate shape
+        # ----- estimate shape
         # expression
         shape = shapePC.dot(sp)
-        shape = np.reshape(shape, [int(len(shape)/3), 3]).T
-        ep = estimate_expression(x, shapeMU, expPC, model['expEV'][:n_ep,:], shape, s, R, t[:2], lamb = 20)
-        lsp.append(sp); lep.append(ep); ls.append(s), lR.append(R), lt.append(t)
+        shape = np.reshape(shape, [int(len(shape) / 3), 3]).T
+        ep = estimate_expression(x, shapeMU, expPC, model['expEV'][:n_ep, :], shape, s, R, t[:2], lamb=20)
+        lsp.append(sp);
+        lep.append(ep);
+        ls.append(s), lR.append(R), lt.append(t)
 
         # shape
         expression = expPC.dot(ep)
-        expression = np.reshape(expression, [int(len(expression)/3), 3]).T
-        sp = estimate_shape(x, shapeMU, shapePC, model['shapeEV'][:n_sp,:], expression, s, R, t[:2], lamb = 40)
+        expression = np.reshape(expression, [int(len(expression) / 3), 3]).T
+        sp = estimate_shape(x, shapeMU, shapePC, model['shapeEV'][:n_sp, :], expression, s, R, t[:2], lamb=40)
 
     # print('ls', ls)
     # print('lR', lR)

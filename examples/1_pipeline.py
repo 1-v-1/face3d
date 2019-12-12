@@ -24,7 +24,7 @@ colors = colors/np.max(colors)
 # scale. target size=180 for example
 s = 180/(np.max(vertices[:,1]) - np.min(vertices[:,1]))
 # rotate 30 degree for example
-R = mesh.transform.angle2matrix([0, 30, 0]) 
+R = mesh.transform.angle2matrix([0, 30, 0])
 # no translation. center of obj:[0,0]
 t = [0, 0, 0]
 transformed_vertices = mesh.transform.similarity_transform(vertices, s, R, t)

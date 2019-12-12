@@ -5,6 +5,7 @@ from __future__ import print_function
 import numpy as np
 import scipy.io as sio
 
+
 ### ---------------------------------  load BFM data
 def load_BFM(model_path):
     ''' load BFM 3DMM model
@@ -30,7 +31,7 @@ def load_BFM(model_path):
     '''
     C = sio.loadmat(model_path)
     model = C['model']
-    model = model[0,0]
+    model = model[0, 0]
 
     # change dtype from double(np.float64) to np.float32, 
     # since big matrix process(espetially matrix dot) is too slow in python.
@@ -41,15 +42,16 @@ def load_BFM(model_path):
     model['expPC'] = model['expPC'].astype(np.float32)
 
     # matlab start with 1. change to 0 in python.
-    model['tri'] = model['tri'].T.copy(order = 'C').astype(np.int32) - 1
-    model['tri_mouth'] = model['tri_mouth'].T.copy(order = 'C').astype(np.int32) - 1
-    
+    model['tri'] = model['tri'].T.copy(order='C').astype(np.int32) - 1
+    model['tri_mouth'] = model['tri_mouth'].T.copy(order='C').astype(np.int32) - 1
+
     # kpt ind
     model['kpt_ind'] = (np.squeeze(model['kpt_ind']) - 1).astype(np.int32)
 
     return model
 
-def load_BFM_info(path = 'BFM_info.mat'):
+
+def load_BFM_info(path='BFM_info.mat'):
     ''' load 3DMM model extra information
     Args:
         path: path to BFM info. 
@@ -72,10 +74,11 @@ def load_BFM_info(path = 'BFM_info.mat'):
     '''
     C = sio.loadmat(path)
     model_info = C['model_info']
-    model_info = model_info[0,0]
+    model_info = model_info[0, 0]
     return model_info
 
-def load_uv_coords(path = 'BFM_UV.mat'):
+
+def load_uv_coords(path='BFM_UV.mat'):
     ''' load uv coords of BFM
     Args:
         path: path to data.
@@ -83,10 +86,11 @@ def load_uv_coords(path = 'BFM_UV.mat'):
         uv_coords: [nver, 2]. range: 0-1
     '''
     C = sio.loadmat(path)
-    uv_coords = C['UV'].copy(order = 'C')
+    uv_coords = C['UV'].copy(order='C')
     return uv_coords
 
-def load_pncc_code(path = 'pncc_code.mat'):
+
+def load_pncc_code(path='pncc_code.mat'):
     ''' load pncc code of BFM
     PNCC code: Defined in 'Face Alignment Across Large Poses: A 3D Solution Xiangyu'
     download at http://www.cbsr.ia.ac.cn/users/xiangyuzhu/projects/3DDFA/main.htm.
@@ -99,12 +103,13 @@ def load_pncc_code(path = 'pncc_code.mat'):
     pncc_code = C['vertex_code'].T
     return pncc_code
 
-## 
+
+##
 def get_organ_ind(model_info):
     ''' get nose, eye, mouth index
     '''
     valid_bin = model_info['segbin'].astype(bool)
-    organ_ind = np.nonzero(valid_bin[0,:])[0]
+    organ_ind = np.nonzero(valid_bin[0, :])[0]
     for i in range(1, valid_bin.shape[0] - 1):
-        organ_ind = np.union1d(organ_ind, np.nonzero(valid_bin[i,:])[0])
+        organ_ind = np.union1d(organ_ind, np.nonzero(valid_bin[i, :])[0])
     return organ_ind.astype(np.int32)
