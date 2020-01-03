@@ -24,13 +24,31 @@ sp = bfm.get_shape_para('zero')
 # print(sp_sigma)
 # print(sp_sigma.shape)
 ep = bfm.get_exp_para('zero')
-# print(ep.shape)
+print(ep.shape)
+
+ep[:10] = np.array([[-2.4658144 ],
+ [ 1.5232908 ],
+ [-0.58274204],
+ [ 1.1200945 ],
+ [ 0.35412225],
+ [-1.2616647 ],
+ [-1.0544292 ],
+ [-1.6552277 ],
+ [-0.41645545],
+ [-1.2801003 ]])
+
+
 exp_sigma = bfm.get_exp_sigma()
 # print(exp_sigma)
 # print(exp_sigma.shape)
 # ep[4] = -5
 
 vertices = bfm.generate_vertices(sp, ep)
+print('vertices.shape: ' + str(vertices.shape))
+
+from utils import dump_to_ply
+wfp = '3dmm.ply'
+dump_to_ply(vertices, wfp)
 
 tp = bfm.get_tex_para('zero')
 # print(tp.shape)
@@ -41,6 +59,10 @@ tp = bfm.get_tex_para('zero')
 
 colors = bfm.generate_colors(tp)
 colors = np.minimum(np.maximum(colors, 0), 1)
+
+from utils import write_obj_with_colors
+wfp = '3dmm.obj'
+write_obj_with_colors(wfp, vertices, colors)
 
 
 # --- 3. transform vertices to proper position
